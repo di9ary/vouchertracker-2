@@ -14,7 +14,7 @@
         }
         h1 {
             text-align: center;
->            color: #2c3e50;
+            color: #2c3e50;
             font-size: 26px;
             margin-bottom: 20px;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -27,27 +27,19 @@
             border-radius: 15px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
+        .total-amount {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #3498db;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
         .chart-container {
             margin-bottom: 30px;
-        }
-        .pie-chart-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
-        .pie-chart {
-            width: 200px;
-            height: 200px;
-            position: relative;
-        }
-        .pie-label {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 14px;
-            color: #2c3e50;
-            text-align: center;
         }
         .bar-container {
             display: flex;
@@ -181,17 +173,14 @@
             .container {
                 padding: 15px;
             }
-            .pie-chart {
-                width: 160px;
-                height: 160px;
-            }
-            .pie-label {
-                font-size: 12px;
+            .total-amount {
+                font-size: 16px;
+                padding: 10px;
             }
             .bar-container {
                 height: 180px;
             }
-            .bar-label, .bar Amount {
+            .bar-label, .bar-amount {
                 font-size: 10px;
             }
             .amount-btn {
@@ -208,11 +197,7 @@
 <body>
     <div class="container">
         <h1>消費券管理</h1>
-        <div class="pie-chart-container">
-            <h2>總金額分配</h2>
-            <canvas id="pieChart" class="pie-chart"></canvas>
-            <div class="pie-label" id="pieTotal">總額: 0</div>
-        </div>
+        <div class="total-amount" id="totalAmount">總額: 0</div>
         <div class="chart-container">
             <h2>各銀行餘額</h2>
             <div class="bar-container" id="barContainer">
@@ -227,7 +212,7 @@
             <select id="bankSelect">
                 <option value="mpay">Mpay</option>
                 <option value="boc">中銀</option>
-將<option value="icbc">工商</option>
+                <option value="icbc">工商</option>
                 <option value="taifung">大豐</option>
             </select>
         </div>
@@ -257,7 +242,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let banks = JSON.parse(localStorage.getItem('banks')) || {
             mpay: { total: 0, vouchers: [] },
@@ -267,42 +251,7 @@
         };
         let selectedAmount = null;
 
-        // Initialize Pie Chart
-        const pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
-            type: 'pie',
-            data: {
-                labels: ['Mpay', '中銀', '工商', '大豐'],
-                datasets: [{
-                    data: [banks.mpay.total, banks.boc.total, banks.icbc.total, banks.taifung.total],
-                    backgroundColor: ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f'],
-                    borderColor: '#fff',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: { size: 12 },
-                            color: '#2c3e50'
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.parsed || 0;
-                                return `${context.label}: ${value}`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        function updateCharts() {
+        function updateChart() {
             // Update Bar Chart
             const maxHeight = 200; // Maximum bar height in pixels
             const maxAmount = Math.max(banks.mpay.total, banks.boc.total, banks.icbc.total, banks.taifung.total, 1);
@@ -325,16 +274,9 @@
                 amounts[bank].textContent = banks[bank].total;
             }
 
-            // Update Pie Chart
+            // Update Total Amount
             const total = banks.mpay.total + banks.boc.total + banks.icbc.total + banks.taifung.total;
-            pieChart.data.datasets[0].data = [
-                banks.mpay.total,
-                banks.boc.total,
-                banks.icbc.total,
-                banks.taifung.total
-            ];
-            pieChart.update();
-            document.getElementById('pieTotal').textContent = `總額: ${total}`;
+            document.getElementById('totalAmount').textContent = `總額: ${total}`;
 
             // Save to localStorage
             localStorage.setItem('banks', JSON.stringify(banks));
@@ -360,7 +302,7 @@
             for (let i = 0; i < quantity; i++) {
                 banks[bank].vouchers.push(selectedAmount);
             }
-            updateCharts();
+            updateChart();
         }
 
         function resetData() {
@@ -372,7 +314,7 @@
                     taifung: { total: 0, vouchers: [] }
                 };
                 localStorage.setItem('banks', JSON.stringify(banks));
-                updateCharts();
+                updateChart();
             }
         }
 
@@ -386,8 +328,8 @@
             });
         });
 
-        // Initialize charts
-        updateCharts();
+        // Initialize chart
+        updateChart();
     </script>
 </body>
 </html>
