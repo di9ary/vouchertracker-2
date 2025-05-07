@@ -14,7 +14,7 @@
         }
         h1 {
             text-align: center;
-            color: #2c3e50;
+>            color: #2c3e50;
             font-size: 26px;
             margin-bottom: 20px;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -144,8 +144,12 @@
             border-color: #3498db;
             box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
         }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
         button {
-            width: 100%;
+            flex: 1;
             padding: 14px;
             background: #3498db;
             color: #fff;
@@ -157,9 +161,15 @@
             transition: all 0.3s ease;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         }
+        button.reset {
+            background: #e74c3c;
+        }
         button:hover {
             background: #2980b9;
             transform: translateY(-2px);
+        }
+        button.reset:hover {
+            background: #c0392b;
         }
         @media (max-width: 600px) {
             body {
@@ -181,7 +191,7 @@
             .bar-container {
                 height: 180px;
             }
-            .bar-label, .bar-amount {
+            .bar-label, .bar Amount {
                 font-size: 10px;
             }
             .amount-btn {
@@ -217,7 +227,7 @@
             <select id="bankSelect">
                 <option value="mpay">Mpay</option>
                 <option value="boc">中銀</option>
-                <option value="icbc">工商</option>
+將<option value="icbc">工商</option>
                 <option value="taifung">大豐</option>
             </select>
         </div>
@@ -234,20 +244,22 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="quantitySelect">數量 (0-3)</label>
+            <label for="quantitySelect">數量 (1-3)</label>
             <select id="quantitySelect">
-                <option value="0">0</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
             </select>
         </div>
-        <button onclick="addVoucher()">添加消費券</button>
+        <div class="button-group">
+            <button onclick="addVoucher()">添加消費券</button>
+            <button class="reset" onclick="resetData()">重設</button>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const banks = {
+        let banks = JSON.parse(localStorage.getItem('banks')) || {
             mpay: { total: 0, vouchers: [] },
             boc: { total: 0, vouchers: [] },
             icbc: { total: 0, vouchers: [] },
@@ -261,7 +273,7 @@
             data: {
                 labels: ['Mpay', '中銀', '工商', '大豐'],
                 datasets: [{
-                    data: [0, 0, 0, 0],
+                    data: [banks.mpay.total, banks.boc.total, banks.icbc.total, banks.taifung.total],
                     backgroundColor: ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f'],
                     borderColor: '#fff',
                     borderWidth: 2
@@ -323,6 +335,9 @@
             ];
             pieChart.update();
             document.getElementById('pieTotal').textContent = `總額: ${total}`;
+
+            // Save to localStorage
+            localStorage.setItem('banks', JSON.stringify(banks));
         }
 
         function addVoucher() {
@@ -334,14 +349,30 @@
                 return;
             }
 
-            if (quantity >= 0 && quantity <= 3) {
-                banks[bank].total += selectedAmount * quantity;
-                for (let i = 0; i < quantity; i++) {
-                    banks[bank].vouchers.push(selectedAmount);
-                }
+            // Check total voucher count limit
+            const currentCount = banks[bank].vouchers.length;
+            if (currentCount + quantity > 3) {
+                alert(`每家銀行最多只能有3張消費券！當前${bank}已有${currentCount}張。`);
+                return;
+            }
+
+            banks[bank].total += selectedAmount * quantity;
+            for (let i = 0; i < quantity; i++) {
+                banks[bank].vouchers.push(selectedAmount);
+            }
+            updateCharts();
+        }
+
+        function resetData() {
+            if (confirm('確定要重設所有數據嗎？此操作無法恢復！')) {
+                banks = {
+                    mpay: { total: 0, vouchers: [] },
+                    boc: { total: 0, vouchers: [] },
+                    icbc: { total: 0, vouchers: [] },
+                    taifung: { total: 0, vouchers: [] }
+                };
+                localStorage.setItem('banks', JSON.stringify(banks));
                 updateCharts();
-            } else {
-                alert('數量必須在0到3之間');
             }
         }
 
